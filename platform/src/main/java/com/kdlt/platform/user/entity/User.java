@@ -34,7 +34,7 @@ public class User {
     @Column(nullable = false, name="date_creation")
     private LocalDateTime dateCreation;
     @UpdateTimestamp
-    @Column(nullable = false, name= "dpdated_at")
+    @Column(nullable = false, name= "updated_at")
     private LocalDateTime updatedAt;
 
     public Long getId() {
