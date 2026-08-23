@@ -11,6 +11,7 @@ import org.hibernate.cache.spi.support.StorageAccess;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 
@@ -18,6 +19,8 @@ import java.time.LocalDateTime;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final StorageService storageService;
+
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder){
         this.userRepository = userRepository;
@@ -34,6 +37,24 @@ public class UserService {
         dto.setPhotoUrl(user.getPhotoUrl());
 
         return dto;
+    }
+
+    public UserProfileDTO getProfile(Long userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found."));
+        return mapToUserProfiledTO(user);
+    }
+
+    public String uploadPhoto(Long userId, MultipartFile file){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException(("User not found.")));
+
+        String photoUrl = storageService.store(file, "profile-photos");
+
+        user.setPhotoUrl(photoUrl);
+        userRepository.save(user);
+
+        return photoUrl;
     }
 
     public UserProfileDTO createUser(UserCreateDto dto){
