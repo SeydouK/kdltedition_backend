@@ -1,20 +1,19 @@
 package com.kdlt.platform.user.dto;
 
 public class UserCreateDto {
-    private String photoUrl;
-    private String firstName;
-    private String LastName;
-    private String phoneNumber;
+    @Email
+    @NotBlank
     private String email;
+
+    @NotBlank
+    @Size(min = 8)
     private String motDePasse;
 
-    public String getPhotoUrl() {
-        return photoUrl;
-    }
+    @NotBlank
+    private String firstName;
 
-    public void setPhotoUrl(String photoUrl) {
-        this.photoUrl = photoUrl;
-    }
+    @NotBlank
+    private String LastName;
 
     public String getFirstName() {
         return firstName;

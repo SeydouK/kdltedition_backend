@@ -22,9 +22,10 @@ public class UserService {
     private final StorageService storageService;
 
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder){
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, StorageService storageService){
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.storageService = storageService;
     }
 
     private UserProfileDTO mapToUserProfiledTO(User user){
@@ -41,13 +42,13 @@ public class UserService {
 
     public UserProfileDTO getProfile(Long userId){
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         return mapToUserProfiledTO(user);
     }
 
     public String uploadPhoto(Long userId, MultipartFile file){
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException(("User not found.")));
+                .orElseThrow(() -> new ResourceNotFoundException(("User not found.")));
 
         String photoUrl = storageService.store(file, "profile-photos");
 
@@ -81,10 +82,14 @@ public class UserService {
 
     public UserProfileDTO updateProfile(Long userId, UserUpdateDto dto){
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
 
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
+        if (!user.getEmail().equalsIgnoreCase(dto.getEmail())
+                && userRepository.existsByEmail(dto.getEmail())) {
+            throw new EmailAlreadyExistsException("Cet email est déjà utilisé.");
+        }
         user.setEmail(dto.getEmail());
         String motDePasse = passwordEncoder.encode(dto.getMotDePasse());
         user.setMotDePasseHash(motDePasse);
@@ -97,13 +102,13 @@ public class UserService {
 
     public UserProfileDTO findByEmail(String email){
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         return mapToUserProfiledTO(user);
     }
 
     public void deactivateUser(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
 
         user.setActive(false);
         userRepository.save(user);
@@ -112,19 +117,22 @@ public class UserService {
     @PreAuthorize("hasRole('ADMIN')")
     public void changeRole(String email, Role newRole){
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         user.setRole(newRole);
         userRepository.save(user);
     }
 
+    public void changePassword(Long userId, ChangePasswordDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
 
+        if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getMotDePasseHash())) {
+            throw new BadRequestException("Mot de passe actuel incorrect.");
+        }
 
-
-
-
-
-
-
+        user.setMotDePasseHash(passwordEncoder.encode(dto.getNewPassword()));
+        userRepository.save(user);
+    }
 
 
 }

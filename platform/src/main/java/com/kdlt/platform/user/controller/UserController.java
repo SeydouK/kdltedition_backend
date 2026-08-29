@@ -46,7 +46,7 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserProfileDTO> createUser(@RequestParam String token,
-                                                     @RequestBody UserCreateDto dto){
+                                                     @Valid @RequestBody UserCreateDto dto){
         Invite invite = inviteService.validateToken(token);
         if(dto.getEmail() == null || !dto.getEmail().equalsIgnoreCase(invite.getEmail())){
             throw new RuntimeException(("L'email ne correspond pas a l'invitation."));

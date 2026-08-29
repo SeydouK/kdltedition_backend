@@ -41,13 +41,13 @@ public class InviteService {
 
     public Invite validateToken(String token){
         Invite invite = inviteRepository.findByToken(token)
-                .orElseThrow(() -> new RuntimeException("Invitation introuvable."));
+                .orElseThrow(() -> new ResourceNotFoundException("Invitation introuvable."));
 
         if (invite.isUsed()){
-            throw new RuntimeException("Cette invitation a déjà été utilisée.");
+            throw new BadRequestException("Cette invitation a déjà été utilisée.");
         }
         if (invite.isExpired()){
-            throw new RuntimeException("Cette invitation a expiré. Demandew-en une nouvelle.");
+            throw new BadRequestException("Cette invitation a expiré. Demandew-en une nouvelle.");
         }
 
         return invite;
