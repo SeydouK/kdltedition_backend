@@ -7,11 +7,13 @@ import com.kdlt.platform.user.dto.UserUpdateDto;
 import com.kdlt.platform.user.entity.Role;
 import com.kdlt.platform.user.entity.User;
 import com.kdlt.platform.user.repository.UserRepository;
-import org.hibernate.cache.spi.support.StorageAccess;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import com.kdlt.platform.exceptions.ResourceNotFoundException;
+import com.kdlt.platform.exceptions.BadRequestException;
+import com.kdlt.platform.user.dto.ChangePasswordDto;
 
 import java.time.LocalDateTime;
 
@@ -65,7 +67,6 @@ public class UserService {
         User user = new User();
         String motDePasse = passwordEncoder.encode(dto.getMotDePasse());
 
-        user.setPhotoUrl(dto.getPhotoUrl());
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
         user.setMotDePasseHash(motDePasse);
@@ -91,10 +92,7 @@ public class UserService {
             throw new EmailAlreadyExistsException("Cet email est déjà utilisé.");
         }
         user.setEmail(dto.getEmail());
-        String motDePasse = passwordEncoder.encode(dto.getMotDePasse());
-        user.setMotDePasseHash(motDePasse);
         user.setPhoneNumber(dto.getPhoneNumber());
-        user.setPhotoUrl(dto.getPhotoUrl());
 
         userRepository.save(user);
         return mapToUserProfiledTO(user);

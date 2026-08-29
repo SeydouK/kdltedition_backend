@@ -6,7 +6,6 @@ public class UserProfileDTO {
     private String LastName;
     private String phoneNumber;
     private String email;
-    private String motDePasse;
 
     public String getPhotoUrl() {
         return photoUrl;
@@ -46,13 +45,5 @@ public class UserProfileDTO {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getMotDePasse() {
-        return motDePasse;
-    }
-
-    public void setMotDePasse(String motDePasse) {
-        this.motDePasse = motDePasse;
     }
 }

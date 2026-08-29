@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.validation.Valid;
 
 import java.util.Map;
 
@@ -63,5 +64,12 @@ public class UserController {
                                                      @RequestBody UserUpdateDto dto){
         UserProfileDTO user = userService.updateProfile(currentUser.getId(), dto);
         return ResponseEntity.ok(user);
+    }
+
+    @PutMapping("/me/password")
+    public ResponseEntity<Void> changePassword(@AuthenticationPrincipal User currentUser,
+                                               @Valid @RequestBody ChangePasswordDto dto){
+        userService.changePassword(currentUser.getId(), dto);
+        return ResponseEntity.noContent().build();
     }
 }

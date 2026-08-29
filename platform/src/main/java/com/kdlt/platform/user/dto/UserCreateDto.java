@@ -1,5 +1,9 @@
 package com.kdlt.platform.user.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class UserCreateDto {
     @Email
     @NotBlank
@@ -14,6 +18,8 @@ public class UserCreateDto {
 
     @NotBlank
     private String LastName;
+
+    private String phoneNumber;
 
     public String getFirstName() {
         return firstName;
