@@ -18,7 +18,7 @@ public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(nullable = false, name="photo_url")
+    @Column(nullable = true, name="photo_url")
     private String photoUrl;
     @Column(nullable = false)
     private String email;
