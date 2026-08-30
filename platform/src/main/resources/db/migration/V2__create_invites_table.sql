@@ -1,0 +1,8 @@
+CREATE TABLE invites (
+     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+     email VARCHAR(255) NOT NULL,
+     token VARCHAR(255) NOT NULL UNIQUE,
+     expires_at TIMESTAMP NOT NULL,
+     used BOOLEAN NOT NULL DEFAULT false,
+     date_creation TIMESTAMP NOT NULL DEFAULT now()
+);
