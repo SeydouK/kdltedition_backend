@@ -26,6 +26,7 @@ public class CategoryService {
         Category category = new Category();
         category.setName(dto.getName());
         category.setSlug(dto.getSlug());
+        category.setDescription(dto.getDescription());
 
         Category saved = categoryRepository.save(category);
         return mapToDto(saved);

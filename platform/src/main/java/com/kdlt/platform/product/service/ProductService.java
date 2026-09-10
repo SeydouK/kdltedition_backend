@@ -26,7 +26,7 @@ public class ProductService {
     }
 
     public ProductDto createProduct(CreateProductDto dto) {
-        if (productRepository.existBySlug(dto.getSlug())) {
+        if (productRepository.existsBySlug(dto.getSlug())) {
             throw new BadRequestException("Ce slug de produit existe déjà.");
         }
         if (dto.getType() == ProductType.STANDARD && dto.getBasePrice() == null) {

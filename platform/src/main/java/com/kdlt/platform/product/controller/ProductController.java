@@ -23,11 +23,11 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<List<ProductDto>> getAllProducts(
-            @RequestParam(required=false) Long categoryId){
+            @RequestParam(required = false) Long categoryId) {
         if (categoryId != null) {
             return ResponseEntity.ok(productService.getProductsByCategory(categoryId));
         }
-        return ResponseEntity.ok(productService.getProductsByCategory(categoryId));
+        return ResponseEntity.ok(productService.getAllActiveProducts());
     }
 
     @GetMapping("/{slug}")
