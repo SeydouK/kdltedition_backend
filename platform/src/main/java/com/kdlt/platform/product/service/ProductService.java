@@ -1,7 +1,7 @@
 package com.kdlt.platform.product.service;
 
 import com.kdlt.platform.category.entity.Category;
-import com.kdlt.platform.category.entity.repository.CategoryRepository;
+import com.kdlt.platform.category.repository.CategoryRepository;
 import com.kdlt.platform.exceptions.BadRequestException;
 import com.kdlt.platform.exceptions.ResourceNotFoundException;
 import com.kdlt.platform.product.dto.CreateProductDto;

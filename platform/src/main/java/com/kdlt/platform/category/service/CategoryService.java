@@ -3,7 +3,7 @@ package com.kdlt.platform.category.service;
 import com.kdlt.platform.category.dto.CategoryDto;
 import com.kdlt.platform.category.dto.CreateCategoryDto;
 import com.kdlt.platform.category.entity.Category;
-import com.kdlt.platform.category.entity.repository.CategoryRepository;
+import com.kdlt.platform.category.repository.CategoryRepository;
 import com.kdlt.platform.exceptions.BadRequestException;
 import com.kdlt.platform.exceptions.ResourceNotFoundException;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package com.kdlt.platform.category.entity.repository;
+package com.kdlt.platform.category.repository;
 
 import com.kdlt.platform.category.entity.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
