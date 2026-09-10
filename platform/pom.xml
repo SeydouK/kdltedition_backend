@@ -136,6 +136,18 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 			<plugin>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-maven-plugin</artifactId>
+				<version>11.14.1</version>
+				<configuration>
+					<url>jdbc:postgresql://ep-patient-snow-ax5gr5jh-pooler.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require&amp;channel_binding=require</url>
+					<user>neondb_owner</user>
+					<password>npg_n1c4svypXjUa</password>
+					<outOfOrder>true</outOfOrder>
+					<cleanDisabled>false</cleanDisabled>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<executions>
