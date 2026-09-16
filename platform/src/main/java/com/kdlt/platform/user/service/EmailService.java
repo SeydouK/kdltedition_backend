@@ -8,6 +8,8 @@ import org.springframework.web.client.RestTemplate;
 
 import org.springframework.http.HttpHeaders;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -47,5 +49,39 @@ public class EmailService {
         } catch (Exception e) {
             throw new RuntimeException("Échec de l'envoi de l'email via Brevo : " + e.getMessage(), e);
         }
+    }
+
+    public void sendNewQuoteNotificationToStaff(String staffEmail, String customerName, String productName, int quantity) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("sender", Map.of("name", "KDLT Éditions", "email", mailFrom));
+        payload.put("to", List.of(Map.of("email", staffEmail)));
+        payload.put("subject", "Nouvelle demande de devis - " + productName);
+        payload.put("htmlContent",
+                "<p>Nouvelle demande de devis reçue :</p>" +
+                        "<p><strong>Client :</strong> " + customerName + "</p>" +
+                        "<p><strong>Produit :</strong> " + productName + "</p>" +
+                        "<p><strong>Quantité :</strong> " + quantity + "</p>" +
+                        "<p>Connectez-vous à l'espace admin pour y répondre.</p>"
+        );
+
+        sendEmail(payload);
+    }
+
+    public void sendQuoteResponseToCustomer(String customerEmail, String productName, boolean accepted, String proposedPrice, String staffResponse) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("sender", Map.of("name", "KDLT Éditions", "email", mailFrom));
+        payload.put("to", List.of(Map.of("email", customerEmail)));
+        payload.put("subject", "Réponse à votre demande de devis - " + productName);
+
+        String content = accepted
+                ? "<p>Bonne nouvelle ! Voici notre proposition pour votre demande concernant <strong>" + productName + "</strong> :</p>" +
+                "<p><strong>Prix proposé :</strong> " + proposedPrice + " FCFA</p>" +
+                (staffResponse != null ? "<p>" + staffResponse + "</p>" : "")
+                : "<p>Concernant votre demande de devis pour <strong>" + productName + "</strong> :</p>" +
+                (staffResponse != null ? "<p>" + staffResponse + "</p>" : "<p>Nous ne sommes malheureusement pas en mesure d'honorer cette demande pour le moment.</p>");
+
+        payload.put("htmlContent", content);
+
+        sendEmail(payload);
     }
 }

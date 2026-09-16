@@ -12,6 +12,7 @@ import com.kdlt.platform.quote.entity.Quote;
 import com.kdlt.platform.quote.entity.QuoteStatus;
 import com.kdlt.platform.quote.repository.QuoteRepository;
 import com.kdlt.platform.user.entity.User;
+import com.kdlt.platform.user.service.EmailService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,10 +22,13 @@ public class QuoteService {
 
     private final QuoteRepository quoteRepository;
     private final ProductRepository productRepository;
+    private final EmailService emailService;
 
-    public QuoteService(QuoteRepository quoteRepository, ProductRepository productRepository) {
+
+    public QuoteService(QuoteRepository quoteRepository, ProductRepository productRepository, EmailService emailService) {
         this.quoteRepository = quoteRepository;
         this.productRepository = productRepository;
+        this.emailService = emailService;
     }
 
     public QuoteDto createQuote(User user, CreateQuoteDto dto) {
@@ -43,6 +47,18 @@ public class QuoteService {
         quote.setStatus(QuoteStatus.PENDING);
 
         Quote saved = quoteRepository.save(quote);
+
+        try {
+            emailService.sendNewQuoteNotificationToStaff(
+                    "skabore2020@gmail.com",
+                    user.getFirstName() + " " + user.getLastName(),
+                    product.getName(),
+                    dto.getQuantity()
+            );
+        } catch (Exception e) {
+            System.err.println("Échec notification email nouveau devis : " + e.getMessage());
+        }
+
         return mapToDto(saved);
     }
 
@@ -92,6 +108,19 @@ public class QuoteService {
         quote.setStaffResponse(dto.getStaffResponse());
 
         Quote saved = quoteRepository.save(quote);
+
+        try {
+            emailService.sendQuoteResponseToCustomer(
+                    quote.getUser().getEmail(),
+                    quote.getProduct().getName(),
+                    dto.getStatus() == QuoteStatus.ANSWERED,
+                    dto.getProposedPrice() != null ? dto.getProposedPrice().toString() : null,
+                    dto.getStaffResponse()
+            );
+        } catch (Exception e) {
+            System.err.println("Échec notification email réponse devis : " + e.getMessage());
+        }
+
         return mapToDto(saved);
     }
 
