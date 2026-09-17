@@ -43,4 +43,11 @@ public class CategoryController {
         categoryService.deleteCategory(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    public ResponseEntity<CategoryDto> updateCategory(@PathVariable Long id,
+                                                      @Valid @RequestBody CreateCategoryDto dto) {
+        return ResponseEntity.ok(categoryService.updateCategory(id, dto));
+    }
 }

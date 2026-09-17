@@ -60,4 +60,15 @@ public class CategoryService {
         dto.setDescription(category.getDescription());
         return dto;
     }
+
+    public CategoryDto updateCategory(Long id, CreateCategoryDto dto) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Catégorie introuvable."));
+
+        category.setName(dto.getName());
+        category.setDescription(dto.getDescription());
+
+        Category saved = categoryRepository.save(category);
+        return mapToDto(saved);
+    }
 }
