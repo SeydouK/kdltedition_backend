@@ -16,6 +16,7 @@ import com.kdlt.platform.exceptions.BadRequestException;
 import com.kdlt.platform.user.dto.ChangePasswordDto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class UserService {
@@ -130,6 +131,12 @@ public class UserService {
 
         user.setMotDePasseHash(passwordEncoder.encode(dto.getNewPassword()));
         userRepository.save(user);
+    }
+
+    public List<UserProfileDTO> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::mapToUserProfiledTO)
+                .toList();
     }
 
 

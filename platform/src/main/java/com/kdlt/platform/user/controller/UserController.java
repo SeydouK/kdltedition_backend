@@ -4,16 +4,19 @@ import com.kdlt.platform.user.dto.UserCreateDto;
 import com.kdlt.platform.user.dto.UserProfileDTO;
 import com.kdlt.platform.user.dto.UserUpdateDto;
 import com.kdlt.platform.user.entity.Invite;
+import com.kdlt.platform.user.entity.Role;
 import com.kdlt.platform.user.entity.User;
 import com.kdlt.platform.user.service.InviteService;
 import com.kdlt.platform.user.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.Valid;
 import com.kdlt.platform.user.dto.ChangePasswordDto;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -71,6 +74,27 @@ public class UserController {
     public ResponseEntity<Void> changePassword(@AuthenticationPrincipal User currentUser,
                                                @Valid @RequestBody ChangePasswordDto dto){
         userService.changePassword(currentUser.getId(), dto);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    public ResponseEntity<List<UserProfileDTO>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
+
+    @PutMapping("/{email}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> changeRole(@PathVariable String email,
+                                           @RequestParam Role newRole) {
+        userService.changeRole(email, newRole);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{email}/deactivate")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    public ResponseEntity<Void> deactivateUser(@PathVariable String email) {
+        userService.deactivateUser(email);
         return ResponseEntity.noContent().build();
     }
 }
