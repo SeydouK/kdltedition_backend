@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
+    long countByActiveTrue();
     Optional<Product> findBySlug(String slug);
     boolean existsBySlug(String slug);
     List<Product> findByCategoryIdAndActiveTrue(Long categoryId);

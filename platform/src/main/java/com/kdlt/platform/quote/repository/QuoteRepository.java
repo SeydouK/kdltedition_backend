@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface QuoteRepository extends JpaRepository<Quote, Long> {
+    long countByStatus(QuoteStatus status);
     List<Quote> findByUserIdOrderByDateCreationDesc(Long userId);
     List<Quote> findByStatusOrderByDateCreationDesc(QuoteStatus status);
     List<Quote> findAllByOrderByDateCreationDesc();
