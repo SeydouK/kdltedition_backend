@@ -1,5 +1,6 @@
 package com.kdlt.platform.user.controller;
 
+import com.kdlt.platform.auth.dto.CustomerRegisterDto;
 import com.kdlt.platform.user.dto.UserCreateDto;
 import com.kdlt.platform.user.dto.UserProfileDTO;
 import com.kdlt.platform.user.dto.UserUpdateDto;
@@ -8,6 +9,7 @@ import com.kdlt.platform.user.entity.Role;
 import com.kdlt.platform.user.entity.User;
 import com.kdlt.platform.user.service.InviteService;
 import com.kdlt.platform.user.service.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -97,4 +99,10 @@ public class UserController {
         userService.deactivateUser(email);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/register")
+    public ResponseEntity<UserProfileDTO> registerCustomer(@Valid @RequestBody CustomerRegisterDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.registerCustomer(dto));
+    }
+
 }

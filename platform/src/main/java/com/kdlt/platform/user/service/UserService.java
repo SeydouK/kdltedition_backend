@@ -1,5 +1,6 @@
 package com.kdlt.platform.user.service;
 
+import com.kdlt.platform.auth.dto.CustomerRegisterDto;
 import com.kdlt.platform.exceptions.EmailAlreadyExistsException;
 import com.kdlt.platform.user.dto.UserCreateDto;
 import com.kdlt.platform.user.dto.UserProfileDTO;
@@ -137,6 +138,26 @@ public class UserService {
         return userRepository.findAll().stream()
                 .map(this::mapToUserProfiledTO)
                 .toList();
+    }
+
+    public UserProfileDTO registerCustomer(CustomerRegisterDto dto) {
+        String normalizedEmail = dto.getEmail().trim().toLowerCase();
+
+        if (userRepository.existsByEmail(normalizedEmail)) {
+            throw new EmailAlreadyExistsException("Cet email est déjà utilisé.");
+        }
+
+        User user = new User();
+        user.setFirstName(dto.getFirstName());
+        user.setLastName(dto.getLastName());
+        user.setEmail(normalizedEmail);
+        user.setMotDePasseHash(passwordEncoder.encode(dto.getMotDePasse()));
+        user.setPhoneNumber(dto.getPhoneNumber());
+        user.setRole(Role.CUSTOMER);
+        user.setActive(true);
+
+        User saved = userRepository.save(user);
+        return mapToUserProfiledTO(saved);
     }
 
 
