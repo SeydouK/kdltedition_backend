@@ -63,24 +63,25 @@ public class UserService {
     }
 
     public UserProfileDTO createUser(UserCreateDto dto){
-        if (userRepository.findByEmail(dto.getEmail()).isPresent()){
-            throw new EmailAlreadyExistsException("The email already exists.");
-        }
-        User user = new User();
-        String motDePasse = passwordEncoder.encode(dto.getMotDePasse());
+        String email = dto.getEmail().trim().toLowerCase();
 
+        if (userRepository.existsByEmail(email)){
+            throw new EmailAlreadyExistsException("Cet email est déjà utilisé.");
+        }
+
+        User user = new User();
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
-        user.setMotDePasseHash(motDePasse);
+        user.setEmail(email);
+        user.setMotDePasseHash(passwordEncoder.encode(dto.getMotDePasse()));
         user.setPhoneNumber(dto.getPhoneNumber());
-        user.setEmail(dto.getEmail());
+        // Compte créé par invitation : on part du rôle le moins privilégié.
+        // Un ADMIN peut l'augmenter ensuite via PUT /api/users/{email}/role.
+        user.setRole(Role.STAFF);
         user.setActive(true);
-        LocalDateTime maintenant = LocalDateTime.now();
-        user.setDateCreation(maintenant);
-        user.setUpdatedAt(maintenant);
 
-        userRepository.save(user);
-        return mapToUserProfiledTO(user);
+        User saved = userRepository.save(user);
+        return mapToUserProfiledTO(saved);
     }
 
     public UserProfileDTO updateProfile(Long userId, UserUpdateDto dto){

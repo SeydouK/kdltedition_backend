@@ -24,7 +24,7 @@ public class InviteController {
     public ResponseEntity<Map<String, Object>> validate(@PathVariable String token){
         try{
             Invite invite = inviteService.validateToken(token);
-            return ResponseEntity.ok(Map.of("valide", true, "email", invite.getEmail()));
+            return ResponseEntity.ok(Map.of("valid", true, "email", invite.getEmail()));
         } catch (RuntimeException e) {
             return ResponseEntity.ok(Map.of("valid", false, "message", e.getMessage()));
         }

@@ -28,6 +28,7 @@ public class InviteService {
     }
 
     public Invite createInvite(String email){
+        email = email.trim().toLowerCase();
         Invite invite = new Invite();
         invite.setEmail(email);
         invite.setToken(UUID.randomUUID().toString());

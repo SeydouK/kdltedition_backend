@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.Valid;
 import com.kdlt.platform.user.dto.ChangePasswordDto;
-
+import com.kdlt.platform.exceptions.BadRequestException;
 import java.util.List;
 import java.util.Map;
 
@@ -56,8 +56,7 @@ public class UserController {
                                                      @Valid @RequestBody UserCreateDto dto){
         Invite invite = inviteService.validateToken(token);
         if(dto.getEmail() == null || !dto.getEmail().equalsIgnoreCase(invite.getEmail())){
-            throw new RuntimeException(("L'email ne correspond pas a l'invitation."));
-        }
+            throw new BadRequestException("L'email ne correspond pas à l'invitation.");        }
 
         UserProfileDTO user = userService.createUser(dto);
         inviteService.markUsed(invite);
