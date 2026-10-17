@@ -10,6 +10,10 @@ public class UpdateProductDto {
     private ProductType type;
     private BigDecimal basePrice;
     private Boolean active;
+    private Long categoryId;
+
+    public Long getCategoryId() { return categoryId; }
+    public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
 
     public String getName() {
         return name;

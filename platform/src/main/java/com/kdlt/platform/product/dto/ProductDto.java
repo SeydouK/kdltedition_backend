@@ -14,6 +14,10 @@ public class ProductDto {
     private String imageUrl;
     private Long categoryId;
     private String categoryName;
+    private boolean active;
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 
     public Long getId() {
         return id;

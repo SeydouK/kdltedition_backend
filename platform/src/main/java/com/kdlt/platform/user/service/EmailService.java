@@ -86,4 +86,15 @@ public class EmailService {
             throw new RuntimeException("Échec de l'envoi de l'email via Brevo : " + e.getMessage(), e);
         }
     }
+
+    public void sendHtmlEmail(String toEmail, String subject, String htmlContent) {
+        Map<String, Object> body = Map.of(
+                "sender", Map.of("email", fromAddress, "name", "KDLT Éditions"),
+                "to", List.of(Map.of("email", toEmail)),
+                "subject", subject,
+                "htmlContent", htmlContent
+        );
+
+        sendEmail(body);
+    }
 }

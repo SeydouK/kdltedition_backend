@@ -14,6 +14,8 @@ import com.kdlt.platform.user.entity.User;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.kdlt.platform.order.event.OrderStatusChangedEvent;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,10 +25,14 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
+    private final ApplicationEventPublisher events;
 
-    public OrderService(OrderRepository orderRepository, CartRepository cartRepository) {
+    public OrderService(OrderRepository orderRepository,
+                        CartRepository cartRepository,
+                        ApplicationEventPublisher events) {
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
+        this.events = events;
     }
 
     @Transactional
@@ -62,6 +68,7 @@ public class OrderService {
 
         cart.getItems().clear();
         cartRepository.save(cart);
+        publishStatusChange(saved);
 
         return mapToDto(saved);
     }
@@ -91,12 +98,60 @@ public class OrderService {
     }
 
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN') or hasRole('STAFF')")
-    public OrderDto updateOrderStatus(Long orderId, OrderStatus status) {
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN') or hasRole('STAFF')")
+    public OrderDto updateOrderStatus(Long orderId, OrderStatus newStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Commande introuvable."));
 
-        order.setStatus(status);
-        return mapToDto(orderRepository.save(order));
+        OrderStatus current = order.getStatus();
+        if (!current.canTransitionTo(newStatus)) {
+            throw new BadRequestException(
+                    "Impossible de passer cette commande du statut " + current + " au statut " + newStatus + ".");
+        }
+
+        order.setStatus(newStatus);
+        Order saved = orderRepository.save(order);
+
+        publishStatusChange(saved);
+        return mapToDto(saved);
+    }
+
+    private void publishStatusChange(Order order) {
+        User customer = order.getUser();
+
+        List<OrderStatusChangedEvent.Line> lines = order.getItems().stream()
+                .map(item -> new OrderStatusChangedEvent.Line(
+                        item.getProductName(),
+                        item.getQuantity(),
+                        item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()))))
+                .toList();
+
+        events.publishEvent(new OrderStatusChangedEvent(
+                order.getId(),
+                customer.getEmail(),
+                customer.getFirstName(),
+                order.getStatus(),
+                lines,
+                order.getTotalAmount()));
+    }
+
+    private void publishStatusChange(Order order) {
+        User customer = order.getUser();
+
+        List<OrderStatusChangedEvent.Line> lines = order.getItems().stream()
+                .map(item -> new OrderStatusChangedEvent.Line(
+                        item.getProductName(),
+                        item.getQuantity(),
+                        item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()))))
+                .toList();
+
+        events.publishEvent(new OrderStatusChangedEvent(
+                order.getId(),
+                customer.getEmail(),
+                customer.getFirstName(),
+                order.getStatus(),
+                lines,
+                order.getTotalAmount()));
     }
 
     private OrderDto mapToDto(Order order) {
