@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.kdlt.platform.order.event.OrderStatusChangedEvent;
 import org.springframework.context.ApplicationEventPublisher;
-
+import com.kdlt.platform.user.service.StaffDirectory;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -26,13 +26,16 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
     private final ApplicationEventPublisher events;
+    private final StaffDirectory staffDirectory;
 
     public OrderService(OrderRepository orderRepository,
                         CartRepository cartRepository,
-                        ApplicationEventPublisher events) {
+                        ApplicationEventPublisher events,
+                        StaffDirectory staffDirectory) {
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.events = events;
+        this.staffDirectory = staffDirectory;
     }
 
     @Transactional
@@ -98,7 +101,6 @@ public class OrderService {
     }
 
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN') or hasRole('STAFF')")
-    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN') or hasRole('STAFF')")
     public OrderDto updateOrderStatus(Long orderId, OrderStatus newStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Commande introuvable."));
@@ -126,32 +128,20 @@ public class OrderService {
                         item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()))))
                 .toList();
 
-        events.publishEvent(new OrderStatusChangedEvent(
-                order.getId(),
-                customer.getEmail(),
-                customer.getFirstName(),
-                order.getStatus(),
-                lines,
-                order.getTotalAmount()));
-    }
-
-    private void publishStatusChange(Order order) {
-        User customer = order.getUser();
-
-        List<OrderStatusChangedEvent.Line> lines = order.getItems().stream()
-                .map(item -> new OrderStatusChangedEvent.Line(
-                        item.getProductName(),
-                        item.getQuantity(),
-                        item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()))))
-                .toList();
+        // L'équipe n'est alertée que pour une nouvelle commande ; les autres étapes ne concernent que le client.
+        List<String> staffEmails = order.getStatus() == OrderStatus.PENDING
+                ? staffDirectory.activeStaffEmails()
+                : List.of();
 
         events.publishEvent(new OrderStatusChangedEvent(
                 order.getId(),
                 customer.getEmail(),
                 customer.getFirstName(),
+                customer.getLastName(),
                 order.getStatus(),
                 lines,
-                order.getTotalAmount()));
+                order.getTotalAmount(),
+                staffEmails));
     }
 
     private OrderDto mapToDto(Order order) {

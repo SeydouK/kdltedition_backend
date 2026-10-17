@@ -13,6 +13,7 @@ import com.kdlt.platform.quote.entity.QuoteStatus;
 import com.kdlt.platform.quote.repository.QuoteRepository;
 import com.kdlt.platform.user.entity.User;
 import com.kdlt.platform.user.service.EmailService;
+import com.kdlt.platform.user.service.StaffDirectory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,12 +24,16 @@ public class QuoteService {
     private final QuoteRepository quoteRepository;
     private final ProductRepository productRepository;
     private final EmailService emailService;
+    private final StaffDirectory staffDirectory;
 
-
-    public QuoteService(QuoteRepository quoteRepository, ProductRepository productRepository, EmailService emailService) {
+    public QuoteService(QuoteRepository quoteRepository,
+                        ProductRepository productRepository,
+                        EmailService emailService,
+                        StaffDirectory staffDirectory) {
         this.quoteRepository = quoteRepository;
         this.productRepository = productRepository;
         this.emailService = emailService;
+        this.staffDirectory = staffDirectory;
     }
 
     public QuoteDto createQuote(User user, CreateQuoteDto dto) {
@@ -48,15 +53,18 @@ public class QuoteService {
 
         Quote saved = quoteRepository.save(quote);
 
-        try {
-            emailService.sendNewQuoteNotificationToStaff(
-                    "skabore2020@gmail.com",
-                    user.getFirstName() + " " + user.getLastName(),
-                    product.getName(),
-                    dto.getQuantity()
-            );
-        } catch (Exception e) {
-            System.err.println("Échec notification email nouveau devis : " + e.getMessage());
+        String customerName = user.getFirstName() + " " + user.getLastName();
+        for (String staffEmail : staffDirectory.activeStaffEmails()) {
+            try {
+                emailService.sendNewQuoteNotificationToStaff(
+                        staffEmail,
+                        customerName,
+                        product.getName(),
+                        dto.getQuantity()
+                );
+            } catch (Exception e) {
+                System.err.println("Échec de l'alerte nouvelle demande de devis : " + e.getMessage());
+            }
         }
 
         return mapToDto(saved);

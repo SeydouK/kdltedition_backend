@@ -6,6 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.HtmlUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -45,8 +46,8 @@ public class EmailService {
                 "subject", "Nouvelle demande de devis - " + productName,
                 "htmlContent",
                 "<p>Nouvelle demande de devis reçue :</p>" +
-                        "<p><strong>Client :</strong> " + customerName + "</p>" +
-                        "<p><strong>Produit :</strong> " + productName + "</p>" +
+                        "<p><strong>Client :</strong> " + escape(customerName) + "</p>" +
+                        "<p><strong>Produit :</strong> " + escape(productName) + "</p>" +
                         "<p><strong>Quantité :</strong> " + quantity + "</p>" +
                         "<p>Connectez-vous à l'espace admin pour y répondre.</p>"
         );
@@ -55,12 +56,14 @@ public class EmailService {
     }
 
     public void sendQuoteResponseToCustomer(String customerEmail, String productName, boolean accepted, String proposedPrice, String staffResponse) {
+        String response = staffResponse != null ? "<p>" + escape(staffResponse) + "</p>" : "";
+
         String content = accepted
-                ? "<p>Bonne nouvelle ! Voici notre proposition pour votre demande concernant <strong>" + productName + "</strong> :</p>" +
-                "<p><strong>Prix proposé :</strong> " + proposedPrice + " FCFA</p>" +
-                (staffResponse != null ? "<p>" + staffResponse + "</p>" : "")
-                : "<p>Concernant votre demande de devis pour <strong>" + productName + "</strong> :</p>" +
-                (staffResponse != null ? "<p>" + staffResponse + "</p>" : "<p>Nous ne sommes malheureusement pas en mesure d'honorer cette demande pour le moment.</p>");
+                ? "<p>Bonne nouvelle ! Voici notre proposition pour votre demande concernant <strong>" + escape(productName) + "</strong> :</p>" +
+                "<p><strong>Prix proposé :</strong> " + escape(proposedPrice) + " FCFA</p>" +
+                response
+                : "<p>Concernant votre demande de devis pour <strong>" + escape(productName) + "</strong> :</p>" +
+                (staffResponse != null ? response : "<p>Nous ne sommes malheureusement pas en mesure d'honorer cette demande pour le moment.</p>");
 
         Map<String, Object> body = Map.of(
                 "sender", Map.of("email", fromAddress, "name", "KDLT Éditions"),
@@ -70,6 +73,10 @@ public class EmailService {
         );
 
         sendEmail(body);
+    }
+
+    private String escape(String text) {
+        return HtmlUtils.htmlEscape(text == null ? "" : text).replace("\n", "<br>");
     }
 
     private void sendEmail(Map<String, Object> body) {
