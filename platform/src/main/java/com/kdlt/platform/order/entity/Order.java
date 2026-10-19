@@ -36,6 +36,12 @@ public class Order {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Embedded
+    private DeliveryAddress deliveryAddress;
+
+    public DeliveryAddress getDeliveryAddress() { return deliveryAddress; }
+    public void setDeliveryAddress(DeliveryAddress deliveryAddress) { this.deliveryAddress = deliveryAddress; }
+
     @PrePersist
     protected void onCreate() {
         this.dateCreation = LocalDateTime.now();

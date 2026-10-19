@@ -1,9 +1,11 @@
 package com.kdlt.platform.order.controller;
 
 import com.kdlt.platform.order.dto.OrderDto;
+import com.kdlt.platform.order.dto.PlaceOrderRequest;
 import com.kdlt.platform.order.entity.OrderStatus;
 import com.kdlt.platform.order.service.OrderService;
 import com.kdlt.platform.user.entity.User;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,8 +25,9 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<OrderDto> placeOrder(@AuthenticationPrincipal User user) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(orderService.placeOrder(user));
+    public ResponseEntity<OrderDto> placeOrder(@AuthenticationPrincipal User user,
+                                               @Valid @RequestBody PlaceOrderRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(orderService.placeOrder(user, request));
     }
 
     @GetMapping("/me")

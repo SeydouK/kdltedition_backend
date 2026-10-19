@@ -97,7 +97,8 @@ public class OrderNotificationService {
                 "<p>Bonjour " + HtmlUtils.htmlEscape(event.customerFirstName()) + ",</p>"
                         + "<h2 style=\"font-size:20px;margin:16px 0 8px;\">" + headline(event.status()) + "</h2>"
                         + "<p style=\"margin:0 0 20px;\">" + message(event.status()) + "</p>"
-                        + orderSummary(event));
+                        + orderSummary(event)
+                        + deliveryBlock(event, false));
     }
 
     private String buildStaffHtml(OrderStatusChangedEvent event) {
@@ -108,7 +109,37 @@ public class OrderNotificationService {
                         + "<p style=\"margin:0 0 20px;\"><strong>Client :</strong> "
                         + HtmlUtils.htmlEscape(customerName) + " (" + HtmlUtils.htmlEscape(event.customerEmail()) + ")</p>"
                         + orderSummary(event)
+                        + deliveryBlock(event, true)
                         + "<p style=\"margin-top:24px;\">Connectez-vous à l'espace d'administration pour la confirmer.</p>");
+    }
+
+    private String deliveryBlock(OrderStatusChangedEvent event, boolean forStaff) {
+        OrderStatusChangedEvent.Delivery delivery = event.delivery();
+        if (delivery == null) return "";
+
+        StringBuilder html = new StringBuilder();
+        html.append("<p style=\"margin:20px 0 4px;font-weight:bold;\">Adresse de livraison</p>")
+                .append("<p style=\"margin:0;\">")
+                .append(HtmlUtils.htmlEscape(delivery.address())).append(", ")
+                .append(HtmlUtils.htmlEscape(delivery.city()))
+                .append("</p>")
+                .append("<p style=\"margin:0;\">Tél. ").append(HtmlUtils.htmlEscape(delivery.phone())).append("</p>");
+
+        if (delivery.notes() != null) {
+            html.append("<p style=\"margin:4px 0 0;color:#5B5348;\">")
+                    .append(HtmlUtils.htmlEscape(delivery.notes()).replace("\n", "<br>"))
+                    .append("</p>");
+        }
+
+        // Simple lien vers une carte, sans clé ni API : il s'ouvre dans l'application de cartes du téléphone.
+        if (forStaff && delivery.latitude() != null && delivery.longitude() != null) {
+            String url = "https://www.google.com/maps?q="
+                    + delivery.latitude().toPlainString() + "," + delivery.longitude().toPlainString();
+            html.append("<p style=\"margin:8px 0 0;\"><a href=\"").append(url)
+                    .append("\">Voir la position sur la carte</a></p>");
+        }
+
+        return html.toString();
     }
 
     private String orderSummary(OrderStatusChangedEvent event) {
@@ -142,4 +173,6 @@ public class OrderNotificationService {
     private String formatPrice(BigDecimal value) {
         return NumberFormat.getInstance(Locale.FRANCE).format(value) + " FCFA";
     }
+
+
 }

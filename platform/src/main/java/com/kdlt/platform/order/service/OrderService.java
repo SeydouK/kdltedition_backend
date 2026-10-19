@@ -19,6 +19,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import com.kdlt.platform.user.service.StaffDirectory;
 import java.math.BigDecimal;
 import java.util.List;
+import com.kdlt.platform.order.dto.DeliveryAddressDto;
+import com.kdlt.platform.order.dto.PlaceOrderRequest;
+import com.kdlt.platform.order.entity.DeliveryAddress;
+import java.math.RoundingMode;
 
 @Service
 public class OrderService {
@@ -39,7 +43,7 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderDto placeOrder(User user) {
+    public OrderDto placeOrder(User user, PlaceOrderRequest request) {
         Cart cart = cartRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new BadRequestException("Votre panier est vide."));
 
@@ -47,9 +51,12 @@ public class OrderService {
             throw new BadRequestException("Votre panier est vide.");
         }
 
+        DeliveryAddress delivery = buildDeliveryAddress(request);
+
         Order order = new Order();
         order.setUser(user);
         order.setStatus(OrderStatus.PENDING);
+        order.setDeliveryAddress(delivery);
 
         BigDecimal total = BigDecimal.ZERO;
 
@@ -74,6 +81,29 @@ public class OrderService {
         publishStatusChange(saved);
 
         return mapToDto(saved);
+    }
+
+    private DeliveryAddress buildDeliveryAddress(PlaceOrderRequest request) {
+        boolean hasLatitude = request.getLatitude() != null;
+        boolean hasLongitude = request.getLongitude() != null;
+        if (hasLatitude != hasLongitude) {
+            throw new BadRequestException("Les coordonnées GPS sont incomplètes.");
+        }
+
+        DeliveryAddress delivery = new DeliveryAddress();
+        delivery.setPhone(request.getDeliveryPhone().trim());
+        delivery.setAddress(request.getDeliveryAddress().trim());
+        delivery.setCity(request.getDeliveryCity().trim());
+
+        String notes = request.getDeliveryNotes() == null ? "" : request.getDeliveryNotes().trim();
+        delivery.setNotes(notes.isEmpty() ? null : notes);
+
+        if (hasLatitude) {
+            delivery.setLatitude(request.getLatitude().setScale(6, RoundingMode.HALF_UP));
+            delivery.setLongitude(request.getLongitude().setScale(6, RoundingMode.HALF_UP));
+        }
+
+        return delivery;
     }
 
     public List<OrderDto> getMyOrders(User user) {
@@ -133,6 +163,16 @@ public class OrderService {
                 ? staffDirectory.activeStaffEmails()
                 : List.of();
 
+        DeliveryAddress address = order.getDeliveryAddress();
+        OrderStatusChangedEvent.Delivery delivery = address == null ? null
+                : new OrderStatusChangedEvent.Delivery(
+                address.getPhone(),
+                address.getAddress(),
+                address.getCity(),
+                address.getNotes(),
+                address.getLatitude(),
+                address.getLongitude());
+
         events.publishEvent(new OrderStatusChangedEvent(
                 order.getId(),
                 customer.getEmail(),
@@ -141,6 +181,7 @@ public class OrderService {
                 order.getStatus(),
                 lines,
                 order.getTotalAmount(),
+                delivery,
                 staffEmails));
     }
 
@@ -160,6 +201,21 @@ public class OrderService {
             itemDto.setLineTotal(item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
             return itemDto;
         }).toList());
+        User customer = order.getUser();
+        dto.setCustomerName(customer.getFirstName() + " " + customer.getLastName());
+        dto.setCustomerEmail(customer.getEmail());
+
+        DeliveryAddress delivery = order.getDeliveryAddress();
+        if (delivery != null) {
+            DeliveryAddressDto deliveryDto = new DeliveryAddressDto();
+            deliveryDto.setPhone(delivery.getPhone());
+            deliveryDto.setAddress(delivery.getAddress());
+            deliveryDto.setCity(delivery.getCity());
+            deliveryDto.setNotes(delivery.getNotes());
+            deliveryDto.setLatitude(delivery.getLatitude());
+            deliveryDto.setLongitude(delivery.getLongitude());
+            dto.setDeliveryAddress(deliveryDto);
+        }
 
         return dto;
     }

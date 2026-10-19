@@ -12,6 +12,16 @@ public class OrderDto {
     private BigDecimal totalAmount;
     private OrderStatus status;
     private LocalDateTime dateCreation;
+    private DeliveryAddressDto deliveryAddress;
+    private String customerName;
+    private String customerEmail;
+
+    public DeliveryAddressDto getDeliveryAddress() { return deliveryAddress; }
+    public void setDeliveryAddress(DeliveryAddressDto deliveryAddress) { this.deliveryAddress = deliveryAddress; }
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
+    public String getCustomerEmail() { return customerEmail; }
+    public void setCustomerEmail(String customerEmail) { this.customerEmail = customerEmail; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
