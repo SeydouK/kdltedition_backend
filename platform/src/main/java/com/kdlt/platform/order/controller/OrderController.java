@@ -41,6 +41,12 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getMyOrder(user, orderId));
     }
 
+    @GetMapping("/{orderId}")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN') or hasRole('STAFF')")
+    public ResponseEntity<OrderDto> getOrder(@PathVariable Long orderId) {
+        return ResponseEntity.ok(orderService.getOrder(orderId));
+    }
+
     @GetMapping
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN') or hasRole('STAFF')")
     public ResponseEntity<List<OrderDto>> getAllOrders() {

@@ -11,6 +11,7 @@ import com.kdlt.platform.order.entity.OrderItem;
 import com.kdlt.platform.order.entity.OrderStatus;
 import com.kdlt.platform.order.repository.OrderRepository;
 import com.kdlt.platform.user.entity.User;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -125,10 +126,18 @@ public class OrderService {
 
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN') or hasRole('STAFF')")
     public List<OrderDto> getAllOrders() {
-        return orderRepository.findAll().stream()
+        return orderRepository.findAll(Sort.by(Sort.Direction.DESC, "dateCreation")).stream()
                 .map(this::mapToDto)
                 .toList();
     }
+
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN') or hasRole('STAFF')")
+    public OrderDto getOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Commande introuvable."));
+        return mapToDto(order);
+    }
+
 
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN') or hasRole('STAFF')")
     public OrderDto updateOrderStatus(Long orderId, OrderStatus newStatus) {

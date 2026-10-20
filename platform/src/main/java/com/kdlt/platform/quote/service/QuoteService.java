@@ -102,7 +102,9 @@ public class QuoteService {
     public QuoteDto respondToQuote(Long quoteId, RespondQuoteDto dto) {
         Quote quote = quoteRepository.findById(quoteId)
                 .orElseThrow(() -> new ResourceNotFoundException("Devis introuvable."));
-
+        if (quote.getStatus() != QuoteStatus.PENDING) {
+            throw new BadRequestException("Ce devis a déjà reçu une réponse.");
+        }
         if (dto.getStatus() == QuoteStatus.PENDING) {
             throw new BadRequestException("Le statut de réponse doit être ANSWERED ou REJECTED.");
         }
