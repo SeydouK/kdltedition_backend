@@ -78,6 +78,9 @@ public class ProductService {
                     .orElseThrow(() -> new ResourceNotFoundException("Catégorie introuvable."));
             product.setCategory(category);
         }
+        if (product.getType() == ProductType.CUSTOM) {
+            product.setBasePrice(null);
+        }
         if (product.getType() == ProductType.STANDARD && product.getBasePrice() == null) {
             throw new BadRequestException("Un produit standard doit avoir un prix.");
         }
