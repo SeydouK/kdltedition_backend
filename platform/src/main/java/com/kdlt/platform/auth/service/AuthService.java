@@ -8,6 +8,8 @@ import com.kdlt.platform.user.entity.User;
 import com.kdlt.platform.user.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
 @Service
 public class AuthService {

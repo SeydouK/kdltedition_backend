@@ -32,7 +32,7 @@ public class CategoryController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','STAFF')")
     public ResponseEntity<CategoryDto> createCategory(@Valid @RequestBody CreateCategoryDto dto){
         return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.createCategory(dto));
     }
@@ -45,7 +45,7 @@ public class CategoryController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','STAFF')")
     public ResponseEntity<CategoryDto> updateCategory(@PathVariable Long id,
                                                       @Valid @RequestBody CreateCategoryDto dto) {
         return ResponseEntity.ok(categoryService.updateCategory(id, dto));
