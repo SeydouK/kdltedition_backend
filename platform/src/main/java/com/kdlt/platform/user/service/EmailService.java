@@ -1,5 +1,6 @@
 package com.kdlt.platform.user.service;
 
+import com.kdlt.platform.user.entity.Role;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -24,14 +25,16 @@ public class EmailService {
 
     private static final String BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
-    public void sendInviteEmail(String toEmail, String inviteLink) {
+    public void sendInviteEmail(String toEmail, String inviteLink, Role role, long validityHours) {
+        String roleLabel = role == Role.ADMIN ? "administrateur" : "modérateur";
+
         Map<String, Object> body = Map.of(
                 "sender", Map.of("email", fromAddress, "name", "KDLT Éditions"),
                 "to", List.of(Map.of("email", toEmail)),
                 "subject", "Votre invitation à rejoindre KDLT Éditions",
                 "htmlContent", "<p>Bonjour,</p>" +
-                        "<p>Vous avez été invité(e) à rejoindre la plateforme KDLT Éditions.</p>" +
-                        "<p><a href=\"" + inviteLink + "\">Cliquez ici pour créer votre compte</a> (lien valable 30 minutes).</p>" +
+                        "<p>Vous avez été invité(e) à rejoindre la plateforme KDLT Éditions en tant que <strong>" + roleLabel + "</strong>.</p>" +
+                        "<p><a href=\"" + inviteLink + "\">Cliquez ici pour créer votre compte</a> (lien valable " + validityHours + " heures).</p>" +
                         "<p>Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>" +
                         "<p>L'équipe KDLT Éditions</p>"
         );

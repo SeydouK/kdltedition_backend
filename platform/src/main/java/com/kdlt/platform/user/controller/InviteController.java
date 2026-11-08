@@ -32,8 +32,8 @@ public class InviteController {
 
     @PostMapping
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
-    public ResponseEntity<Void> createInvite(@Valid @RequestBody CreateInviteRequest request){
-        inviteService.createInvite(request.getEmail());
+    public ResponseEntity<Void> createInvite(@Valid @RequestBody CreateInviteRequest request) {
+        inviteService.createInvite(request.getEmail(), request.getRole());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }

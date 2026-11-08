@@ -40,6 +40,9 @@ public class UserService {
         dto.setEmail(user.getEmail());
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setPhotoUrl(user.getPhotoUrl());
+        dto.setId(user.getId());
+        dto.setRole(user.getRole());
+        dto.setActive(user.isActive());
 
         return dto;
     }
@@ -62,7 +65,7 @@ public class UserService {
         return photoUrl;
     }
 
-    public UserProfileDTO createUser(UserCreateDto dto){
+    public UserProfileDTO createUser(UserCreateDto dto, Role role){
         String email = dto.getEmail().trim().toLowerCase();
 
         if (userRepository.existsByEmail(email)){
@@ -75,9 +78,7 @@ public class UserService {
         user.setEmail(email);
         user.setMotDePasseHash(passwordEncoder.encode(dto.getMotDePasse()));
         user.setPhoneNumber(dto.getPhoneNumber());
-        // Compte créé par invitation : on part du rôle le moins privilégié.
-        // Un ADMIN peut l'augmenter ensuite via PUT /api/users/{email}/role.
-        user.setRole(Role.STAFF);
+        user.setRole(role);
         user.setActive(true);
 
         User saved = userRepository.save(user);
@@ -107,20 +108,17 @@ public class UserService {
         return mapToUserProfiledTO(user);
     }
 
-    public void deactivateUser(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+    private User loadManageableUser(Long userId, User actor) {
+        User target = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable."));
 
-        user.setActive(false);
-        userRepository.save(user);
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    public void changeRole(String email, Role newRole){
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
-        user.setRole(newRole);
-        userRepository.save(user);
+        if (target.getId().equals(actor.getId())) {
+            throw new BadRequestException("Vous ne pouvez pas modifier votre propre compte.");
+        }
+        if (target.getRole() == Role.OWNER) {
+            throw new BadRequestException("Le compte propriétaire ne peut pas être modifié depuis l'application.");
+        }
+        return target;
     }
 
     public void changePassword(Long userId, ChangePasswordDto dto) {
@@ -135,10 +133,29 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public List<UserProfileDTO> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(this::mapToUserProfiledTO)
                 .toList();
+    }
+
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    public UserProfileDTO changeRole(Long userId, Role newRole, User actor) {
+        if (!InviteService.INVITABLE_ROLES.contains(newRole)) {
+            throw new BadRequestException("Ce rôle ne peut pas être attribué depuis l'application.");
+        }
+
+        User target = loadManageableUser(userId, actor);
+        target.setRole(newRole);
+        return mapToUserProfiledTO(userRepository.save(target));
+    }
+
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    public UserProfileDTO setActive(Long userId, boolean active, User actor) {
+        User target = loadManageableUser(userId, actor);
+        target.setActive(active);
+        return mapToUserProfiledTO(userRepository.save(target));
     }
 
     public UserProfileDTO registerCustomer(CustomerRegisterDto dto) {

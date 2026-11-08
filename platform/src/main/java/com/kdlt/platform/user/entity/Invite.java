@@ -27,6 +27,10 @@ public class Invite {
     @Column(nullable=false)
     private LocalDateTime dateCreation = LocalDateTime.now();
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.STAFF;
+
     public Long getId() {
         return id;
     }
@@ -78,5 +82,8 @@ public class Invite {
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiresAt);
     }
+
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
 
 }

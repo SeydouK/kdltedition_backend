@@ -58,7 +58,7 @@ public class UserController {
         if(dto.getEmail() == null || !dto.getEmail().equalsIgnoreCase(invite.getEmail())){
             throw new BadRequestException("L'email ne correspond pas à l'invitation.");        }
 
-        UserProfileDTO user = userService.createUser(dto);
+        UserProfileDTO user = userService.createUser(dto, invite.getRole());
         inviteService.markUsed(invite);
 
         return ResponseEntity.ok(user);
@@ -84,21 +84,27 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    @PutMapping("/{email}/role")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> changeRole(@PathVariable String email,
-                                           @RequestParam Role newRole) {
-        userService.changeRole(email, newRole);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PutMapping("/{email}/deactivate")
+    @PutMapping("/{userId}/role")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
-    public ResponseEntity<Void> deactivateUser(@PathVariable String email) {
-        userService.deactivateUser(email);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<UserProfileDTO> changeRole(@AuthenticationPrincipal User actor,
+                                                     @PathVariable Long userId,
+                                                     @RequestParam Role newRole) {
+        return ResponseEntity.ok(userService.changeRole(userId, newRole, actor));
     }
 
+    @PutMapping("/{userId}/activate")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    public ResponseEntity<UserProfileDTO> activateUser(@AuthenticationPrincipal User actor,
+                                                       @PathVariable Long userId) {
+        return ResponseEntity.ok(userService.setActive(userId, true, actor));
+    }
+
+    @PutMapping("/{userId}/deactivate")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    public ResponseEntity<UserProfileDTO> deactivateUser(@AuthenticationPrincipal User actor,
+                                                         @PathVariable Long userId) {
+        return ResponseEntity.ok(userService.setActive(userId, false, actor));
+    }
     @PostMapping("/register")
     public ResponseEntity<UserProfileDTO> registerCustomer(@Valid @RequestBody CustomerRegisterDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.registerCustomer(dto));
